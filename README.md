@@ -22,7 +22,7 @@ To use the notebooks in this repository, you need to set up your environment. Fo
 1. Clone the repository to your local machine:
 
 	```sh
-	git clone https://github.com/wiseaidev/rust-web3-solana.git
+	git clone https://github.com/frankolien/rust-web3-solana-frank.git
 	```
 
 1. Install the required dependencies and libraries. Make sure you have [`Rust`](https://rustup.rs/), [`Jupyter Notebook`](https://jupyter.org/install), and [`evcxr_jupyter`](https://github.com/evcxr/evcxr/blob/main/evcxr_jupyter/README.md) installed on your system.
