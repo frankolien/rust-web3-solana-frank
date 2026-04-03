@@ -38,10 +38,10 @@ fn main() {
     let keypair = Keypair::new();
 
     let public_key = keypair.pubkey();
-    let private_key = keypair.secret();
+    let secret_bytes = keypair.secret_bytes();
 
     println!("Public Key: {:?}", public_key);
-    println!("Private Key: {:?}", private_key);
+    println!("Secret Bytes: {:?}", secret_bytes);
 }
 ```
 
@@ -66,15 +66,12 @@ use solana_sdk::signature::Signer;
     let keypair = Keypair::new();
     
     let public_key = keypair.pubkey();
-    let private_key = keypair.secret();
+    let secret_bytes = keypair.secret_bytes();
     
     println!("Public Key: {:?}", public_key);
-    println!("Private Key: {:?}", private_key);
+    println!("Secret Bytes: {:?}", secret_bytes);
 }
 ```
-
-    Public Key: C6kh269tqFPgQnJrcvyQEThRgNxhnTyrGLsDZKoSKp7B
-    Private Key: SecretKey: [206, 153, 32, 204, 95, 103, 248, 6, 94, 161, 18, 95, 218, 192, 48, 196, 114, 5, 26, 248, 229, 190, 225, 76, 62, 199, 247, 0, 21, 13, 181, 141]
 
 
 
@@ -95,7 +92,8 @@ Web3 wallets come in two main types: **custodial** and **non-custodial** [^1]. C
 Creating a wallet on Solana is like creating a special item in a game. With rust and the [**Solana's sdk**](https://docs.rs/solana-sdk), we can make **custodial** or **non-custodial** wallets. Let's explore the following Rust program:
 
 ```rust
-use solana_sdk::{signature::Keypair, pubkey::Pubkey, system_instruction};
+use solana_sdk::signature::{Keypair, Signer};
+use solana_system_interface::instruction::transfer;
 
 fn main() {
     // Creating a hypothetical non-custodial wallet
@@ -105,7 +103,7 @@ fn main() {
     let exchange_keypair = Keypair::new();
 
     // Doing a transaction to move money between wallets
-    let transfer_instruction = system_instruction::transfer(
+    let transfer_instruction = transfer(
         &owner_keypair.pubkey(),
         &exchange_keypair.pubkey(),
         10_000_000, // Amount in lamports (SOL)
@@ -127,7 +125,8 @@ As technology keeps growing, wallets will continue to be your digital sidekick. 
 
 
 ```Rust
-use solana_sdk::{signature::Keypair, pubkey::Pubkey, system_instruction};
+use solana_sdk::signature::{Keypair, Signer};
+use solana_system_interface::instruction::transfer;
 
 {
     // Creating a hypothetical non-custodial wallet
@@ -137,7 +136,7 @@ use solana_sdk::{signature::Keypair, pubkey::Pubkey, system_instruction};
     let exchange_keypair = Keypair::new();
 
     // Doing a transaction to move money between wallets
-    let transfer_instruction = system_instruction::transfer(
+    let transfer_instruction = transfer(
         &owner_keypair.pubkey(),
         &exchange_keypair.pubkey(),
         10_000_000, // Amount in lamports (SOL)
@@ -146,8 +145,6 @@ use solana_sdk::{signature::Keypair, pubkey::Pubkey, system_instruction};
     println!("Transaction Instruction: {:?}", transfer_instruction);
 }
 ```
-
-    Transaction Instruction: Instruction { program_id: 11111111111111111111111111111111, accounts: [AccountMeta { pubkey: 7XhivnMMMaBhStYBPRqLcrr2VFo3PRxXdvr9iT5UrcqV, is_signer: true, is_writable: true }, AccountMeta { pubkey: FsA8rkerhsvr1rRKbJCucQJpYzQEcubjo267AnSLKfX8, is_signer: false, is_writable: true }], data: [2, 0, 0, 0, 128, 150, 152, 0, 0, 0, 0, 0] }
 
 
 
@@ -166,7 +163,7 @@ In Solana's world, accounts act as the guardians of digital secrets. Picture the
 Solana's accounts are like a massive filing cabinet where the blockchain stores its secrets. Every account is identified by a special key, and it holds valuable information, including the amount of SOL (**lamports**), the owner's identity, and a data byte array for additional details. Think of it as a well-organized repository where Solana keeps track of various aspects of its decentralized world.
 
 ```rust
-use solana_sdk::{account_info::AccountInfo, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -176,6 +173,7 @@ fn main() {
     let mut lamports = 0u64;
     let mut data = vec![0u8; 64];
 
+    #[allow(deprecated)]
     let account = AccountInfo {
         key: &account_key,
         is_signer: false,
@@ -184,7 +182,7 @@ fn main() {
         lamports: Rc::new(RefCell::new(&mut lamports)),
         data: Rc::new(RefCell::new(&mut data[..])),
         executable: false,
-        rent_epoch: 0,
+        _unused: 0,
     };
 
     println!("Lamports: {:?}", account.lamports());
@@ -217,7 +215,7 @@ To delve deeper into Solana's account system, refer to the [Solana Accounts Docu
 
 
 ```Rust
-use solana_sdk::{account_info::AccountInfo, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, pubkey::Pubkey};
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -227,6 +225,7 @@ use std::cell::RefCell;
     let mut lamports = 0u64;
 
     let mut data = vec![0u8; 64];
+    #[allow(deprecated)]
     let account = AccountInfo {
         key: &account_key,
         is_signer: false,
@@ -235,7 +234,7 @@ use std::cell::RefCell;
         lamports: Rc::new(RefCell::new(&mut lamports)),
         data: Rc::new(RefCell::new(&mut data[..])),
         executable: false,
-        rent_epoch: 0,
+        _unused: 0,
     };
 
     println!("Lamports: {:?}", account.lamports());
@@ -244,11 +243,6 @@ use std::cell::RefCell;
     println!("Data: {:?}", account.data);
 }
 ```
-
-    Lamports: 0
-    Owner: 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM
-    Is Executable: false
-    Data: RefCell { value: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
 
 
 
@@ -272,10 +266,9 @@ use solana_program::{
     entrypoint,
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
     msg,
     program_error::ProgramError,
-    sysvar::{rent::Rent, Sysvar, clock::Clock},
+    sysvar::{rent::Rent, Sysvar},
 };
 
 #[entrypoint]
@@ -331,13 +324,11 @@ For a deeper look into Solana's smart contract magic, you can refer to the [Sola
 ```Rust
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
-    entrypoint,
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
     msg,
     program_error::ProgramError,
-    sysvar::{rent::Rent, Sysvar, clock::Clock},
+    sysvar::{rent::Rent, Sysvar},
 };
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -397,17 +388,19 @@ fn main() -> ProgramResult {
     let mut serialized_rent_data = borsh::try_to_vec_with_schema(&dummy_rent_data).expect("Failed to serialize rent data");
 
     let rent_sysvar_key = solana_program::sysvar::rent::id();
+    #[allow(deprecated)]
     let rent_sysvar_account = AccountInfo {
         key: &rent_sysvar_key,
         is_signer: false,
         is_writable: false,
         lamports: Rc::new(RefCell::new(&mut lamports1)),
         data: Rc::new(RefCell::new(&mut serialized_rent_data)),
-        owner: &system_program::id(),
+        owner: &solana_system_interface::program::ID,
         executable: false,
-        rent_epoch: 0,
+        _unused: 0,
     };
 
+    #[allow(deprecated)]
     let account_info = AccountInfo {
         key: &account_key,
         is_signer: false,
@@ -416,7 +409,7 @@ fn main() -> ProgramResult {
         lamports: Rc::new(RefCell::new(&mut lamports)),
         data: Rc::new(RefCell::new(&mut data[..])),
         executable: false,
-        rent_epoch: 0,
+        _unused: 0,
     };
 
     let accounts = vec![account_info, rent_sysvar_account];
@@ -429,11 +422,6 @@ fn main() -> ProgramResult {
 
 main()
 ```
-
-    Rent Sysvar Key: 11111111111111111111111111111111
-    Expected Rent Sysvar ID: Sysvar1111111111111111111111111111111111111
-    Account Data Before: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    Account Data After: [1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
 
@@ -471,10 +459,9 @@ Programs in Solana are invoked through instructions, and these instructions are 
 Let's illustrate this with a simple code snippet. In this example, we'll create a basic transaction that transfers SOL tokens from one account to another:
 
 ```rust
-use solana_sdk::{signature::Keypair, system_instruction};
-use solana_program::instruction::Instruction;
+use solana_sdk::signature::{Keypair, Signer};
+use solana_system_interface::instruction::transfer;
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::signature::Signer;
 use solana_sdk::transaction::Transaction;
 
 {
@@ -485,7 +472,7 @@ use solana_sdk::transaction::Transaction;
     
     let recent_blockhash = rpc_client.get_latest_blockhash()?;
     
-    let instruction = system_instruction::transfer(&sender_keypair.pubkey(), &receiver_keypair.pubkey(), 100);
+    let instruction = transfer(&sender_keypair.pubkey(), &receiver_keypair.pubkey(), 100);
     
     let mut transaction = Transaction::new_signed_with_payer(
         &[instruction.clone()],
@@ -539,10 +526,9 @@ Instructions and transactions form the backbone of Solana's functionality, facil
 
 
 ```Rust
-use solana_sdk::{signature::Keypair, system_instruction};
-use solana_program::{instruction::Instruction, system_program};
+use solana_sdk::signature::{Keypair, Signer};
+use solana_system_interface::instruction::transfer;
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::signature::Signer;
 use solana_sdk::transaction::Transaction;
 
 {
@@ -553,10 +539,9 @@ use solana_sdk::transaction::Transaction;
     
     let recent_blockhash = rpc_client.get_latest_blockhash()?;
     
-    let instruction = system_instruction::transfer(&sender_keypair.pubkey(), &receiver_keypair.pubkey(), 100);
+    let instruction = transfer(&sender_keypair.pubkey(), &receiver_keypair.pubkey(), 100);
 
-    // https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html#method.new_signed_with_payer
-    let mut transaction = Transaction::new_signed_with_payer( // Create a transaction + sign it
+    let mut transaction = Transaction::new_signed_with_payer(
         &[instruction.clone()],
         Some(&sender_keypair.pubkey()),
         &[&sender_keypair],
@@ -571,10 +556,6 @@ use solana_sdk::transaction::Transaction;
 }
 ```
 
-    Instruction: Instruction { program_id: 11111111111111111111111111111111, accounts: [AccountMeta { pubkey: FzNVye5YY3njbd8i9oR4c4peRhHfFkvJoUxAcXzNkN7f, is_signer: true, is_writable: true }, AccountMeta { pubkey: 4wSRThLnwLBeb63rtb8Qy3B2E7326QLdgNGwFf8jpqJK, is_signer: false, is_writable: true }], data: [2, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0] }
-    
-    Transaction: Transaction { signatures: [124C4i3P9YguhSoFsfUxhvjMYNJFy62Lzhn4mXinPM8UFmiLE9BtwZoonjEWTB5PAWJxDXjMsPjPNz9rU3SiEXGy], message: Message { header: MessageHeader { num_required_signatures: 1, num_readonly_signed_accounts: 0, num_readonly_unsigned_accounts: 1 }, account_keys: [FzNVye5YY3njbd8i9oR4c4peRhHfFkvJoUxAcXzNkN7f, 4wSRThLnwLBeb63rtb8Qy3B2E7326QLdgNGwFf8jpqJK, 11111111111111111111111111111111], recent_blockhash: 2a5nhwH3ZzpQ7ybuHmgxA1bTGbjdJMS9DnWTxtsH9yvQ, instructions: [CompiledInstruction { program_id_index: 2, accounts: [0, 1], data: [2, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0] }] } }
-
 
 
 
@@ -585,16 +566,12 @@ use solana_sdk::transaction::Transaction;
 
 
 ```Rust
-use solana_program::system_instruction::{create_account, transfer};
-use solana_sdk::{signature::Keypair, system_instruction};
-use solana_program::{instruction::{AccountMeta, Instruction}, pubkey::Pubkey, message::v0::Message, 
-    entrypoint::ProgramResult};
+use solana_system_interface::instruction::{create_account, transfer};
+use solana_sdk::signature::{Keypair, Signer};
+use solana_program::instruction::{AccountMeta, Instruction};
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::{signature::Signer, 
-     address_lookup_table_account::AddressLookupTableAccount,};
 use solana_sdk::transaction::Transaction;
 use std::collections::HashMap;
-use solana_program::address_lookup_table::{self, state::{AddressLookupTable}};
 
 fn explorer_url(params: HashMap<&str, String>) -> String {
     if let Some(address) = params.get("address") {
@@ -626,7 +603,7 @@ fn explorer_url(params: HashMap<&str, String>) -> String {
         &test_wallet.pubkey(),
         balance_for_rent_exemption + 2_000_000,
         space as u64,
-        &system_program::id(),
+        &solana_system_interface::program::ID,
     );
 
     // create an instruction to transfer lamports to the test wallet
@@ -647,21 +624,6 @@ fn explorer_url(params: HashMap<&str, String>) -> String {
         transfer_to_test_wallet_ix.clone(),
     ];
 
-    // TODO: Use a public wallet address on devnet or mainnet
-    // let raw_account = connection.get_account(&payer.pubkey())?;
-    // let address_lookup_table = AddressLookupTable::deserialize(&raw_account.data)?;
-    // let address_lookup_table_account = AddressLookupTableAccount {
-    //     key: payer.pubkey(),
-    //     addresses: address_lookup_table.addresses.to_vec(),
-    // };
-
-    // let message = Message::try_compile(
-    //         &payer.pubkey(),
-    //         &instructions,
-    //         &[address_lookup_table_account],
-    //         recent_blockhash,
-    //     )?;
-
     // create a transaction and sign it
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
     transaction.partial_sign(&[&payer, &test_wallet], recent_blockhash);
@@ -671,10 +633,8 @@ fn explorer_url(params: HashMap<&str, String>) -> String {
 
     let mut params = HashMap::new();
     
-    // Example with address
     params.insert("address", payer.pubkey().to_string());
     params.insert("cluster", "testnet".to_string());
-    // params.insert("txSignature", sig.to_string());
 
     println!("Transaction completed.");
     println!("Explorer URL: {}", explorer_url(params));

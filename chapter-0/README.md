@@ -2284,6 +2284,7 @@ impl Displayable for Token {
 }
 
 fn main() {
+    
     let wallet = Wallet {
         address: String::from("7Xhiv..."),
         balance: 1_000_000_000,
